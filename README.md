@@ -2,34 +2,16 @@
 
 This is an addon module for the library [Discordia](https://github.com/SinisterRectus/Discordia/) v2, aims at providing support for the new Discord replies. This module will be deprecated when Discordia version 3 is released (which will support replies).
 
-## Documentation
-
-When used with default options, this module will mainly do two things A) will add `Message:newReply` method B) will add `Message.repliesTo` getter.
-
-### The module
-
-When required, this module will return a table value that contains the following proprieties:
-
-|---------|----------|:------------|
-| index   | type     | description |
-| reply   | function | A function that accepts two parameters, the message object you want to reply to, and the message content (which can be a string or a table). |
-| module  | string   | The Git repo name of this module. |
-| version | string   | This module's current version. |
-
-Even though this module do return `reply` **it isn't the recommended way**. The returned table also have a `__call` meta-method set, when called, it will accept a single optional parameter of type table, that should be either the Discordia module you want to patch, or a table for further configuration of how the module behave (See [Options](#options)).
-
-----
-
 ### Methods
 
 #### Message:newReply(message, content)
 
 Sends a new message with a Discord reply to `Message`.  
 
-|---------|----------|:------------|
 | param   | type     | description |
+|---------|----------|:------------|
 | message | Message  | The message you are replying to. |
-| content | string/table | The reply contents for the reply message. A string value means the content is string only, identical to `{content = value}`, a table value can be passed for further options, (See [TextChannel.send](#WIP)).
+| content | string/table | The reply contents for the reply message. A string value means the content is string only, identical to `{content = value}`, a table value can be passed for further options, (See [TextChannel.send](https://github.com/SinisterRectus/Discordia/wiki/TextChannel#sendcontent)).
 
 Note: This method is almost identical to `TextChannel.send` except it pre-sets `message_reference` for you, therefor you can read Discordia wiki for more information about `TextChannel.send`.
 Note: Unlike Discordia's `send`, this method will try to cast parameter `content` to string if it wasn't a string/table value. 
@@ -42,8 +24,8 @@ Note: Unlike Discordia's `send`, this method will try to cast parameter `content
 
 A table value that represents a reply associated with `Message`. If the message does not reply to anything **this will be nil**.
 
-|---------|----------|:------------|
 | index   | type     | description |
+|---------|----------|:------------|
 | message | Message/nil  | The message object this message replies to, if the message was deleted (or cannot be fetched for some reason) this will be nil. Note that this module will try to fetch the message if it wasn't cached already by default (See [Options](#options) if you wish to change that behavior). |
 | channel | TextChannel | The TextChannel object of where the message was sent. |
 | guild   | Guild    | The Guild object of where the reply channel is located under. |
@@ -53,8 +35,8 @@ A table value that represents a reply associated with `Message`. If the message 
 
 A table value that allows the user to provide further configuration and customization of how the module behave.
 
-|-----------------|----------|------------|:------------|
 | index           | type     | default    | description |
+|-----------------|----------|------------|:------------|
 | replyIndex      | any      | `newReply` | What index to assign the reply method to under the `Message` class. |
 | sendIndex       | any      | `send`     | If `patchSend` is true, this will specify what index to assign the module patched version of `TextChannel.send` to under TextChannel class. |
 | replaceOriginal | boolean  | `false`    | Whether or not to patch `Message:reply` with the module version. |
@@ -241,3 +223,19 @@ local discordia = require("discordia-replies") {
   patchGetters = false
 }
 ```
+
+## Documentation
+
+When used with default options, this module will mainly do two things A) will add `Message:newReply` method B) will add `Message.repliesTo` getter.
+
+### The module
+
+When required, this module will return a table value that contains the following proprieties:
+
+| index     | type       | description   |
+| --------- | ---------- | :------------ |
+| reply     | function   | A function that accepts two parameters, the message object you want to reply to, and the message content (which can be a string or a table). |
+| module    | string     | The Git repo name of this module. |
+| version   | string     | This module's current version. |
+
+Even though this module do return `reply` **it isn't the recommended way**. The returned table also have a `__call` meta-method set, when called, it will accept a single optional parameter of type table, that should be either the Discordia module you want to patch, or a table for further configuration of how the module behave (See [Options](#options)). The patched Discordia module is returned.
