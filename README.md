@@ -28,7 +28,7 @@ require("discordia-replies")(discordia) -- Patch Discordia
 local client = discordia.Client()
 client:on("messageCreate", function(msg)
   if msg.repliesTo and msg.repliesTo.message then
-    msg:reply('Detected a reply message that says "' .. msg.repliesTo.message.content .. '"!')
+    msg:reply('Detected a reply to a message that said "' .. msg.repliesTo.message.content .. '"!')
   end
 end)
 
@@ -196,7 +196,7 @@ When required, this module will return a table value that contains the following
 | module    | string     | The Git repo name of this module. |
 | version   | string     | This module's current version. |
 
-Even though this module do return `reply` **it isn't the recommended way**. The returned table also have a `__call` meta-method set, when called, it will accept a single optional parameter of type table, that should be either the Discordia module you want to patch, or a table for further configuration of how the module behave (See [Options](#options)). The patched Discordia module is returned.
+Even though this module do return `reply` **it isn't the recommended way**. The returned table also have a `__call` meta-method set, when called, it will accept a single optional parameter of type table, that should be either the Discordia module you want to patch, or a table for further configuration of how the module behave (See [Options](#options)). This will return a single table value, which is the patched Discordia module. If a Discordia module wasn't passed the module will automatically require one and patch it for you.
 
 ### Methods
 
@@ -206,10 +206,11 @@ Sends a new message with a Discord reply to `Message`.
 
 | param   | type     | description |
 |---------|----------|:------------|
-| message | Message  | The message you are replying to. |
-| content | string/table | The reply contents for the reply message. A string value means the content is string only, identical to `{content = value}`, a table value can be passed for further options, (See [TextChannel.send](https://github.com/SinisterRectus/Discordia/wiki/TextChannel#sendcontent)).
+| message | [Message](https://github.com/SinisterRectus/Discordia/wiki/message)  | The message you are replying to. |
+| content | string/table | The reply contents for the reply message. Regular `TextChannel:send()` rules apply (See [TextChannel.send](https://github.com/SinisterRectus/Discordia/wiki/TextChannel#sendcontent)). Using this makes `message_reference` & `allowed_mentions` available for use.
 
-Note: This method is almost identical to `TextChannel.send` except it pre-sets `message_reference` for you, therefor you can read Discordia wiki for more information about `TextChannel.send`.
+Note: This method is almost identical to `TextChannel.send` except it pre-sets `message_reference` for you, therefor you can read Discordia wiki for more information about it.
+
 Note: Unlike Discordia's `send`, this method will try to cast parameter `content` to string if it wasn't a string/table value. 
 
 ----
@@ -222,10 +223,10 @@ A table value that represents a reply associated with `Message`. If the message 
 
 | index   | type     | description |
 |---------|----------|:------------|
-| message | Message/nil  | The message object this message replies to, if the message was deleted (or cannot be fetched for some reason) this will be nil. Note that this module will try to fetch the message if it wasn't cached already by default (See [Options](#options) if you wish to change that behavior). |
-| channel | TextChannel | The TextChannel object of where the message was sent. |
-| guild   | Guild    | The Guild object of where the reply channel is located under. |
-| client  | Client   | The respective client object. |
+| message | [Message](https://github.com/SinisterRectus/Discordia/wiki/message)/nil | The message object this message replies to, if the message was deleted (or cannot be fetched for some reason) this will be nil. Note that this module will try to fetch the message if it wasn't cached already by default (See [Options](#options) if you wish to change this behavior). |
+| channel | [TextChannel](https://github.com/SinisterRectus/Discordia/wiki/TextChannel) | The TextChannel object of where the message was sent. |
+| guild   | [Guild](https://github.com/SinisterRectus/Discordia/wiki/guild) | The Guild object of where the reply channel is located under. |
+| client  | [Client](https://github.com/SinisterRectus/Discordia/wiki/Client) | The respective client object. |
 
 #### Options
 
@@ -235,7 +236,8 @@ A table value that allows the user to provide further configuration and customiz
 |-----------------|----------|------------|:------------|
 | replyIndex      | any      | `newReply` | What index to assign the reply method to under the `Message` class. |
 | sendIndex       | any      | `send`     | If `patchSend` is true, this will specify what index to assign the module patched version of `TextChannel.send` to under TextChannel class. |
-| replaceOriginal | boolean  | `false`    | Whether or not to patch `Message:reply` with the module version. |
-| patchGetters    | boolean  | `true`     | Whether or not to include the `repliesTo` getter. |
+| replaceOriginal | boolean  | `false`    | Whether or not to patch `Message:reply` with `newReply`. |
+| replyMention    | boolean  | `true`     | Whether or not to mention the user you're replying to. |
+| patchGetters    | boolean  | `true`     | Whether or not to patch in the `repliesTo` getter. |
 | fetchMessage    | boolean  | `true`     | Whether or not try to fetch the replied to message object if wasn't already cached. |
 | failIfNotExists | boolean  | `true`     | Passes `fail_if_not_exists` for all replies requests. See [Discords docs](https://discord.com/developers/docs/resources/channel#message-reference-object-message-reference-structure) for more info. |
