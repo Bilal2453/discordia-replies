@@ -2,12 +2,25 @@
 
 This is an addon module for the library [Discordia](https://github.com/SinisterRectus/Discordia/) v2, aims at providing support for the new Discord replies. This module will be deprecated when Discordia version 3 is released (which will support replies).
 
-## General Examples
+## Index
+
+- [Examples](#examples)
+  - [General Examples](#general-examples)
+  - [Various Examples](#various-examples)
+- [Documentation](#documentation)
+  - [The Module](#the-module)
+  - [Methods](#methods)
+  - [Structures](#structures)
+
+## Examples
+
+### General Examples
 
 - Sending a reply
 
 ```lua
-local discordia = require("discordia-replies")() -- Require and patch Discordia
+local discordia = require("discordia") -- Require Discordia
+require("discordia-replies")() -- Patch Discordia
 
 local client = discordia.Client()
 client:on("messageCreate", function(msg)
@@ -22,8 +35,8 @@ client:run('Bot ...')
 - Reading a message reply
 
 ```lua
-local discordia = require("discordia") -- Require Discordia
-require("discordia-replies")(discordia) -- Patch Discordia
+-- You could also do:
+local discordia = require("discordia-replies")() -- Require and patch Discordia
 
 local client = discordia.Client()
 client:on("messageCreate", function(msg)
@@ -39,7 +52,7 @@ client:run('Bot ...')
 
 ```lua
 local discordia = require("discordia-replies") {
-  patchSend = true,
+  replyMention = false,
   replyIndex = "reply_to_this_message_pls"
   -- other options
 }
@@ -54,47 +67,38 @@ end)
 client:run('Bot ...')
 ```
 
-## Specific Examples
+### Various Examples
 
 Examples for each use. Sorted by most recommended to least. 
 
 1. Requiring the extension
 
-- Passing Discordia as a parameter
+  - Require then patch Discordia
 
 ```lua
 local discordia = require("discordia")
-require("discordia-replies")(discordia)
+require("discordia-replies")()
 ```
 
-- Letting the extension require Discordia for you
+  - Letting the extension require Discordia for you after patching it
 
 ```lua
 local discordia = require("discordia-replies")()
 ```
 
-- Using the extension without patching Discordia (Not recommended. For sending only.)
+  - Using the extension without patching Discordia (Not recommended. For sending only.)
 
 ```lua
-local reply = require("discordia-replies").reply
-```
-
-- Providing both options and your Discordia
-
-```lua
-local discordia = require("discordia")
-require("discordia-replies") {
-  discordia = discordia,
-  patchSend = true,
-  -- etc
-}
+local replies = require("discordia-replies")
+local reply = replies.reply -- A method that takes a message object and text/table
+local reply = replies.send  -- A method that takes a channel object and text/table
 ```
 
 2. Replying to messages
 
 Note that in all listed examples a value of table (instead of string) is supported.
 
-- Using the patched `newReply` method (recommended)
+  - Using the patched `newReply` method (recommended)
 
 ```lua
 message:newReply("Hello World!")
@@ -105,13 +109,14 @@ message:newReply({
 })
 ```
 
-- Using the returned `reply` function
+  - Using the returned `reply` or `send` function
 
 ```lua
 reply(message, "Hello World!")
+send(channel, "Accept a table value too!")
 ```
 
-- Using the patched `send` method (Not recommended. Not enabled by default, see [Options](#options).)
+  - Using the patched `send` method (Not recommended. Not enabled by default, see [Options](#options).)
 
 ```lua
 message.channel:send({
@@ -124,7 +129,7 @@ message.channel:send({
 
 Check [Options](#options) for the full usage.
 
-- Patching the original `Message:reply` method
+  - Patching the original `Message:reply` method
 
 ```lua
 local discordia = require("discordia-replies") {
@@ -139,7 +144,7 @@ end)
 client:run('...')
 ```
 
-- Patching Discordia with your own index for the patched method
+  - Patching Discordia with your own index for the patched `Message:newReply()`
 
 ```lua
 local discordia = require("discordia-replies") {
@@ -155,7 +160,7 @@ end)
 client:run('...')
 ```
 
-- Patching `TextChannel:send` to support message_reference using your own index
+  - Patching `TextChannel:send` to support message_reference using your own index
 
 ```lua
 local discordia = require("discordia-replies") {
@@ -174,7 +179,7 @@ end)
 client:run('...')
 ```
 
-- Using the module without `.repliesTo` getter (Send only)
+  - Using the module without `.repliesTo` getter (Send only)
 
 ```lua
 local discordia = require("discordia-replies") {
@@ -184,7 +189,7 @@ local discordia = require("discordia-replies") {
 
 ## Documentation
 
-When used with default options, this module will mainly do two things A) will add `Message:newReply` method B) will add `Message.repliesTo` getter.
+When used with default options, this module will mainly do two things A) will add `Message:newReply` method B) will add `Message.repliesTo` getter. To do that the extension must patch and inject some stuff into Discordia, mainly into the `Message` class, optionally the `TextChannel` class.
 
 ### The module
 
@@ -192,26 +197,27 @@ When required, this module will return a table value that contains the following
 
 | index     | type       | description   |
 | --------- | ---------- | :------------ |
-| reply     | function   | A function that accepts two parameters, the message object you want to reply to, and the message content (which can be a string or a table). |
+| reply     | function   | A function that accepts two parameters, the Message object you want to reply to, plus the message content (which can be a string or a table, see [newReply](#messagenewreplymessage-content)). |
+| send      | function   | See [TextChannel.text](https://github.com/SinisterRectus/Discordia/wiki/textChannel#sendcontent) documentation.<br>This only differs from `TextChannel:send` in one thing, that it supports `message_reference` & `allowed_mentions` fields.|
 | module    | string     | The Git repo name of this module. |
 | version   | string     | This module's current version. |
 
-Even though this module do return `reply` **it isn't the recommended way**. The returned table also have a `__call` meta-method set, when called, it will accept a single optional parameter of type table, that should be either the Discordia module you want to patch, or a table for further configuration of how the module behave (See [Options](#options)). This will return a single table value, which is the patched Discordia module. If a Discordia module wasn't passed the module will automatically require one and patch it for you.
+The returned table also have a `__call` meta-method set, when called, it can optionally accept a table value for further configuration of how the module behave (See [Options](#options)), and will do the necessarily injections. It will also return a single table value, which is the patched Discordia module (can be ignored).
 
 ### Methods
 
 #### Message:newReply(message, content)
 
-Sends a new message with a Discord reply to `Message`.  
+Sends a new message with a Discord reply referring to `Message`.  
 
 | param   | type     | description |
 |---------|----------|:------------|
 | message | [Message](https://github.com/SinisterRectus/Discordia/wiki/message)  | The message you are replying to. |
 | content | string/table | The reply contents for the reply message. Regular `TextChannel:send()` rules apply (See [TextChannel.send](https://github.com/SinisterRectus/Discordia/wiki/TextChannel#sendcontent)). Using this makes `message_reference` & `allowed_mentions` available for use.
 
-Note: This method is almost identical to `TextChannel.send` except it pre-sets `message_reference` for you, therefor you can read Discordia wiki for more information about it.
+Note: This method is almost identical to `Message.reply` except it pre-sets `message_reference` for you, therefor you can read Discordia wiki for more information about it.
 
-Note: Unlike Discordia's `send`, this method will try to cast parameter `content` to string if it wasn't a string/table value. 
+Note: Unlike Discordia's `send`, this method will try to cast parameter `content` to string if it wasn't a string/table value already.
 
 ----
 
@@ -239,5 +245,5 @@ A table value that allows the user to provide further configuration and customiz
 | replaceOriginal | boolean  | `false`    | Whether or not to patch `Message:reply` with `newReply`. |
 | replyMention    | boolean  | `true`     | Whether or not to mention the user you're replying to. |
 | patchGetters    | boolean  | `true`     | Whether or not to patch in the `repliesTo` getter. |
-| fetchMessage    | boolean  | `true`     | Whether or not try to fetch the replied to message object if wasn't already cached. |
+| fetchMessage    | boolean  | `false`    | Whether or not try to fetch the replied to message object if wasn't already cached. |
 | failIfNotExists | boolean  | `true`     | Passes `fail_if_not_exists` for all replies requests. See [Discords docs](https://discord.com/developers/docs/resources/channel#message-reference-object-message-reference-structure) for more info. |
