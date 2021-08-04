@@ -1,5 +1,7 @@
 # Discordia-Replies
 
+***This have been deprecated! Use Discordia 3 built-in replies implementation instead.***
+
 This is an addon module for the library [Discordia](https://github.com/SinisterRectus/Discordia/) v2, aims at providing support for the new Discord replies. This module will be deprecated when Discordia version 3 is released (which will support replies).
 
 ## Index
